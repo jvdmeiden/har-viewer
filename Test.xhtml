@@ -1,0 +1,45 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>SVG Demo</title>
+
+<script>
+<![CDATA[
+var linuxHist = {};
+var request = new XMLHttpRequest();  
+request.open('GET', '/test.har', false);   
+request.send(null);  
+
+if (request.status == 0) { 
+  console.log(request.responseText);
+}
+else if (request.status == 200) {
+  console.time('parsejson'); 
+//  linuxHist = eval("(" + request.responseText + ")"); 
+  harData = JSON.parse(request.responseText);
+  console.timeEnd('parsejson');
+}  
+
+console.log(harData);
+
+for (var i=0;i<harData.log.entries.length;i++)
+{
+ // console.log(document.body.firstChild);
+ //var entry=document.getElementById("entries");
+ var entry = document.createElement("div"); 
+ var output=harData.log.entries[i].pageref + "<br/>";
+ entry.appendChild(output);
+ var output=harData.log.entries[i].time + "<br/>";
+ entry.appendChild(output);
+}
+
+]]>  
+
+</script>
+</head>
+<body id="body"
+style="position:absolute; z-index:0; border:1px solid black; left:5%; top:5%; width:1250px; height:900px;">
+<p id="entries" >
+
+</p>
+</body>
+</html>

@@ -23,8 +23,16 @@ http.createServer(function(request, response) {
 	var uri = url.parse(request.url).pathname; 
 	if (uri == '/'){
 		uri='index.html';
-    } else if (uri == '/har.js') {
+	} else if (uri == '/har.js') {
+		try {
 			harpoon.print(request, response);
+		}
+		catch (err){ 
+			response.writeHeader(500, {'Content-Type': 'text/plain'}); 
+			response.write(err + '\n'); 
+			response.end(); 
+		}
+		
 	} else {
 	
 		var filename = path.join(process.cwd(), uri); 
@@ -35,14 +43,27 @@ http.createServer(function(request, response) {
 		var re_json=new RegExp(/\.[jJ][sS][oO][nN]$/);
 		var re_xml=new RegExp(/\.[xX][mM][lL]$/);
 		var re_xhtml=new RegExp(/\.[xX][hH][tT][mM][lL]$/);
+		var logPath = "access_log";
+		var now = new Date();
+		var dateAndTime = now.toUTCString();
+		stream = fs.createWriteStream(logPath, {
+			'flags': 'a+',
+			'encoding': 'utf8',
+			'mode': 0644
+		});
+		stream.write(dateAndTime + " | ", 'utf8');
+		stream.write(request.connection.remoteAddress + " | ", 'utf8')
+		stream.write(request.url + " | ", 'utf8');
+		stream.write(JSON.stringify(request.headers) + "\n", 'utf8');
+		stream.end();
  
 		path.exists(filename, function(exists) { 
 			console.log(filename);
 			if(!exists) { 
 				response.writeHeader(404, {'Content-Type': 'text/plain'}); 
-                response.write('404 Not Found\n'); 
+				response.write('404 Not Found\n'); 
 				response.end(); 
-                return; 
+				return; 
 			} 
  
 			fs.readFile(filename, 'binary', function(err, file) { 
@@ -57,15 +78,15 @@ http.createServer(function(request, response) {
 				} else if ( filename.match(re_js)){
 					response.writeHeader(200, {'Content-Type': 'application/javascript'});
 				} else if ( filename.match(re_svg)){
-                    response.writeHeader(200, {'Content-Type': 'image/svg+xml'});
+					response.writeHeader(200, {'Content-Type': 'image/svg+xml'});
 				} else if ( filename.match(re_css)){
-                    response.writeHeader(200, {'Content-Type': 'text/css'});
+					response.writeHeader(200, {'Content-Type': 'text/css'});
 				} else if ( filename.match(re_json)){
-                    response.writeHeader(200, {'Content-Type': 'application/json'});			
+					response.writeHeader(200, {'Content-Type': 'application/json'});			
 				} else if ( filename.match(re_xml)){
-                    response.writeHeader(200, {'Content-Type': 'text/xml'});			
+					response.writeHeader(200, {'Content-Type': 'text/xml'});			
 				} else if ( filename.match(re_xhtml)){
-                    response.writeHeader(200, {'Content-Type': 'application/xhtml+xml'});			
+					response.writeHeader(200, {'Content-Type': 'application/xhtml+xml'});			
 				}else { 
 					response.writeHeader(200, {'Content-Type': 'text/plain'});
 				}   
